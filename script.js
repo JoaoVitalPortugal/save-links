@@ -5,26 +5,20 @@ document.addEventListener('DOMContentLoaded', () => {
     const linksContainer = document.getElementById('linksContainer');
     const copyAllButton = document.getElementById('copyAllButton');
 
-    // 1. Criar o elemento de Toast (Aviso) dinamicamente
     const toast = document.createElement('div');
     toast.id = 'toast';
     document.body.appendChild(toast);
 
-    // Carrega os dados salvos
     let links = JSON.parse(localStorage.getItem('savedLinks')) || [];
 
-    // 2. Função para mostrar a mensagem "bonitona"
     function showToast(message) {
         toast.textContent = message;
         toast.classList.add('show');
-        
-        // Remove a classe após 3 segundos para esconder
         setTimeout(() => {
             toast.classList.remove('show');
         }, 3000);
     }
 
-    // 3. Função para renderizar os links com o novo layout
     function renderLinks() {
         linksContainer.innerHTML = ''; 
         
@@ -45,10 +39,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     <strong>${link.name}</strong>
                     <span>${link.url}</span>
                 </div>
-                <button class="btn-copy" data-index="${index}">Copiar</button>
+                <div class="actions">
+                    <button class="btn-copy" data-index="${index}">Copiar</button>
+                    <button class="btn-delete" data-index="${index}">🗑️</button>
+                </div>
             `;
 
-            // Evento de cópia individual
+            // Evento de Copiar
             div.querySelector('.btn-copy').addEventListener('click', () => {
                 const textToCopy = `${link.name}: ${link.url}`;
                 navigator.clipboard.writeText(textToCopy).then(() => {
@@ -56,21 +53,26 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             });
 
+            // Evento de Deletar
+            div.querySelector('.btn-delete').addEventListener('click', () => {
+                links.splice(index, 1); // Remove o item do array
+                localStorage.setItem('savedLinks', JSON.stringify(links)); // Salva a nova lista
+                renderLinks(); // Atualiza a tela
+                showToast("Link removido! 🗑️");
+            });
+
             linksContainer.appendChild(div);
         });
     }
 
-    // 4. Adicionar novo link
     submitButton.addEventListener('click', () => {
         const name = nameInput.value.trim();
         const url = urlInput.value.trim();
 
         if (name && url) {
             links.push({ name, url });
-            localStorage.setItem('savedLinks', JSON.stringify(links)); // Salva
+            localStorage.setItem('savedLinks', JSON.stringify(links));
             renderLinks();
-            
-            // Limpa os campos e avisa
             nameInput.value = '';
             urlInput.value = '';
             showToast("Salvo com sucesso! ✨");
@@ -79,14 +81,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // 5. Copiar todos os links
     copyAllButton.addEventListener('click', () => {
         const allLinksText = links.map(link => `${link.name}: ${link.url}`).join('\n');
         navigator.clipboard.writeText(allLinksText).then(() => {
-            showToast("Tudo copiado para o clipboard! 📋");
+            showToast("Tudo copiado! 📋");
         });
     });
 
-    
     renderLinks();
 });
