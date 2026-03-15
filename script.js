@@ -5,6 +5,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const linksContainer = document.getElementById('linksContainer');
     const copyAllButton = document.getElementById('copyAllButton');
 
+    // Criando o elemento de toast
     const toast = document.createElement('div');
     toast.id = 'toast';
     document.body.appendChild(toast);
@@ -23,7 +24,10 @@ document.addEventListener('DOMContentLoaded', () => {
         linksContainer.innerHTML = ''; 
         
         if (links.length === 0) {
-            linksContainer.innerHTML = '<p style="opacity:0.5">Nenhum link salvo ainda.</p>';
+            const emptyMsg = document.createElement('p');
+            emptyMsg.style.opacity = '0.5';
+            emptyMsg.textContent = 'Nenhum link salvo ainda.';
+            linksContainer.appendChild(emptyMsg);
             copyAllButton.style.display = 'none';
             return;
         }
@@ -33,34 +37,50 @@ document.addEventListener('DOMContentLoaded', () => {
         links.forEach((link, index) => {
             const div = document.createElement('div');
             div.className = 'link-item';
-            
-            div.innerHTML = `
-                <div class="link-info">
-                    <strong>${link.name}</strong>
-                    <span>${link.url}</span>
-                </div>
-                <div class="actions">
-                    <button class="btn-copy" data-index="${index}">Copiar</button>
-                    <button class="btn-delete" data-index="${index}">🗑️</button>
-                </div>
-            `;
 
-            // Evento de Copiar
-            div.querySelector('.btn-copy').addEventListener('click', () => {
+            // 1. Criar info container (Seguro: usa textContent)
+            const infoDiv = document.createElement('div');
+            infoDiv.className = 'link-info';
+
+            const strong = document.createElement('strong');
+            strong.textContent = link.name; // Injeção de script falha aqui
+
+            const span = document.createElement('span');
+            span.textContent = link.url; // Injeção de script falha aqui
+
+            infoDiv.appendChild(strong);
+            infoDiv.appendChild(span);
+
+            // 2. Criar botões de ação
+            const actionsDiv = document.createElement('div');
+            actionsDiv.className = 'actions';
+
+            const btnCopy = document.createElement('button');
+            btnCopy.className = 'btn-copy';
+            btnCopy.textContent = 'Copiar';
+            btnCopy.onclick = () => {
                 const textToCopy = `${link.name}: ${link.url}`;
                 navigator.clipboard.writeText(textToCopy).then(() => {
                     showToast("Link copiado! 🚀");
                 });
-            });
+            };
 
-            // Evento de Deletar
-            div.querySelector('.btn-delete').addEventListener('click', () => {
-                links.splice(index, 1); // Remove o item do array
-                localStorage.setItem('savedLinks', JSON.stringify(links)); // Salva a nova lista
-                renderLinks(); // Atualiza a tela
+            const btnDelete = document.createElement('button');
+            btnDelete.className = 'btn-delete';
+            btnDelete.textContent = '🗑️';
+            btnDelete.onclick = () => {
+                links.splice(index, 1);
+                localStorage.setItem('savedLinks', JSON.stringify(links));
+                renderLinks();
                 showToast("Link removido! 🗑️");
-            });
+            };
 
+            actionsDiv.appendChild(btnCopy);
+            actionsDiv.appendChild(btnDelete);
+
+            // Montar o item final
+            div.appendChild(infoDiv);
+            div.appendChild(actionsDiv);
             linksContainer.appendChild(div);
         });
     }
